@@ -9,9 +9,9 @@ from model import N_Network,Dueling_Network
 from replay_buffer import ReplayBuffer
 import os
 
-gpus = tf.config.list_physical_devices("GPU")
-tf.config.set_visible_devices(gpus[0], "GPU")
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+# gpus = tf.config.list_physical_devices("GPU")
+# tf.config.set_visible_devices(gpus[0], "GPU")
+# tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 def custom_loss_function(y_true, y_pred):
    squared_difference = tf.square(y_true - y_pred)
@@ -24,7 +24,7 @@ class DuelingDQNAgent:
         self.model_builder = model_builder
         self.state_shape = env.observation_space.shape[0]
         self.n_actions = env.action_space.n
-        self.model = model_builder.create_model(self.state_shape, self.n_actions)
+        self.model, self.model_advantage = model_builder.create_model(self.state_shape, self.n_actions)
 
 
     def train_dqn(self,
@@ -39,7 +39,7 @@ class DuelingDQNAgent:
                 ):
         
         self.model.compile(optimizer=optimizer,loss= custom_loss_function)
-        target_model = self.model_builder.create_model(self.state_shape, self.n_actions)
+        target_model, _ = self.model_builder.create_model(self.state_shape, self.n_actions)
         target_model.set_weights(self.model.get_weights())
 
         step = 0
@@ -49,11 +49,10 @@ class DuelingDQNAgent:
             current_state,info = self.env.reset()
             count = 0
             while True:
-                Q_sa_advantage = self.model.advantage(np.array([current_state]))
+                Q_sa_advantage = self.model_advantage(np.array([current_state]))
                 # print(np.array([current_state]))
                 step += 1
                 action = policy.select_action(Q_sa_advantage[0],step,no_of_episodes)
-                
                 next_state, reward, terminated, truncated, info = self.env.step(action)
 
                 if terminated:
@@ -108,7 +107,7 @@ def plot_rewards(rewards, window_size=10):
     
 def experiment(no_of_episodes):
     # no_of_episodes = 10
-    model_builder = DuelingDQNAgent([512,256,256])
+    model_builder = Dueling_Network([512,256,256])
     env = gym.make("CartPole-v1")
 
     agent = DuelingDQNAgent(env,model_builder)

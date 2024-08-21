@@ -11,7 +11,7 @@ import time
 from replay_buffer import ReplayBuffer
 from keras.optimizers import Adam
 
-from DQN_ import train_dqn
+from DQN import train_dqn
 from Helper import LearningCurvePlot, smooth
 
 def average_over_repetitions(n_repetitions, no_of_episodes, 

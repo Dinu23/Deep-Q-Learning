@@ -8,7 +8,7 @@ class N_Network():
 
 
     def create_model(self,no_inputs, no_outputs):
-        input = tf.keras.Input(no_inputs)
+        input = tf.keras.Input([no_inputs])
         layer = tf.keras.layers.Dense(self.hidden_layers[0],kernel_initializer= tf.keras.initializers.RandomNormal(stddev=0.01), activation=self.hidden_activation)(input)
         for no_neurons in self.hidden_layers[1:]:
             layer = tf.keras.layers.Dense(no_neurons,kernel_initializer= tf.keras.initializers.RandomNormal(stddev=0.01), activation=self.hidden_activation)(layer)   
@@ -22,13 +22,13 @@ class Dueling_Network():
     
 
     def create_model(self,no_inputs, no_outputs):
-        input = tf.keras.Input(no_inputs)
+        input = tf.keras.Input([no_inputs])
         layer = tf.keras.layers.Dense(self.hidden_layers[0],kernel_initializer= tf.keras.initializers.RandomNormal(stddev=0.01), activation=self.hidden_activation)(input)
         for no_neurons in self.hidden_layers[1:]:
             layer = tf.keras.layers.Dense(no_neurons,kernel_initializer= tf.keras.initializers.RandomNormal(stddev=0.01), activation=self.hidden_activation)(layer)   
-        value = tf.keras.layers.Dense(no_outputs, activation=tf.nn.relu)(layer)
+        value = tf.keras.layers.Dense(1, activation=tf.nn.relu)(layer)
         advantage = tf.keras.layers.Dense(no_outputs, activation=tf.nn.relu)(layer)
-        output = value + (advantage -tf.math.reduce_mean(advantage, axis=1, keepdims=True))
-        return tf.keras.Model(inputs=input, outputs=output)
+        output = keras.layers.Lambda(lambda x: (x[0] + x[1] - tf.math.reduce_mean(x[1], axis=1, keepdims=True)),output_shape= (None,2) )((value , advantage))
+        return tf.keras.Model(inputs=input, outputs=output), tf.keras.Model(inputs= input, outputs = advantage)
 
       
